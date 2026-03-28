@@ -15,6 +15,7 @@ publish:
   provider: github
   owner: yalanyali
   repo: osman-gui
+  releaseType: release
 
 directories:
   output: dist-electron
