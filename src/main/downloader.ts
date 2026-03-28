@@ -162,29 +162,13 @@ export function startDownload(
     return
   }
 
-  const tryWithSafari = () => {
-    console.log('[downloader] trying with Safari cookies')
-    onProgress({ status: 'Yaş doğrulaması için deneniyor…', percent: 0 })
-    runYtDlp(
-      { url, format, outputDir, binDir, browser: 'safari' },
-      onProgress, onDone, onError,
-      () => {
-        console.error('[downloader] Safari cookies also age-restricted, giving up')
-        onError({ message: 'yt-dlp exited with code 1' })
-      },
-      () => existsSync(gallerydlPath)
-        ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
-        : onError({ message: 'yt-dlp exited with code 1' }),
-    )
-  }
-
   const tryWithChrome = () => {
     console.log('[downloader] trying with Chrome cookies')
     onProgress({ status: 'Yaş doğrulaması için deneniyor…', percent: 0 })
     runYtDlp(
       { url, format, outputDir, binDir, browser: 'chrome' },
-      onProgress, onDone, tryWithSafari,
-      tryWithSafari,
+      onProgress, onDone, onError,
+      () => onError({ message: 'yt-dlp exited with code 1' }),
       () => existsSync(gallerydlPath)
         ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
         : onError({ message: 'yt-dlp exited with code 1' }),

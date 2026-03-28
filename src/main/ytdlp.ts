@@ -41,6 +41,7 @@ export function spawnYtDlp({ url, format, outputDir, binDir, browser }: SpawnYtD
     '--newline',
     '--ffmpeg-location', binDir,
     '-o', '%(title)s.%(ext)s',
+    '--extractor-args', 'youtube:player_client=tv_embedded,web',
   ]
 
   if (browser) {
