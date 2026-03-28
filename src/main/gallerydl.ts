@@ -16,9 +16,13 @@ interface SpawnGalleryDlArgs {
   url: string
   outputDir: string
   binDir: string
+  browser?: string
 }
 
-export function spawnGalleryDl({ url, outputDir, binDir }: SpawnGalleryDlArgs): ChildProcess {
+export function spawnGalleryDl({ url, outputDir, binDir, browser }: SpawnGalleryDlArgs): ChildProcess {
   const gallerydlPath = join(binDir, 'gallery-dl')
-  return spawn(gallerydlPath, ['-d', outputDir, url], { cwd: outputDir })
+  const args = ['-d', outputDir]
+  if (browser) args.push('--cookies-from-browser', browser)
+  args.push(url)
+  return spawn(gallerydlPath, args, { cwd: outputDir })
 }

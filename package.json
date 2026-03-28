@@ -1,6 +1,6 @@
 {
   "name": "osman-app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Osman App",
   "main": "out/main/index.js",
   "type": "module",

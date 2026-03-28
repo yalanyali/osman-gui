@@ -29,15 +29,17 @@ interface ErrorData {
 }
 
 function runGalleryDl(
-  { url, outputDir, binDir }: DownloadArgs,
+  args: DownloadArgs & { browser?: string },
   onProgress: (data: ProgressData) => void,
   onDone: (data: DoneData) => void,
   onError: (data: ErrorData) => void,
+  onFallback?: () => void,
 ): void {
-  console.log('[downloader] starting gallery-dl for:', url)
-  onProgress({ status: 'Retrying with gallery-dl…', percent: 0 })
+  const { url, outputDir, binDir, browser } = args
+  console.log('[downloader] starting gallery-dl for:', url, browser ? `(browser: ${browser})` : '(no cookies)')
+  onProgress({ status: browser ? 'Retrying with gallery-dl + browser cookies…' : 'Retrying with gallery-dl…', percent: 0 })
 
-  currentProcess = spawnGalleryDl({ url, outputDir, binDir })
+  currentProcess = spawnGalleryDl({ url, outputDir, binDir, browser })
   let outputFile: string | null = null
 
   currentProcess.stdout!.on('data', (data: Buffer) => {
@@ -63,7 +65,12 @@ function runGalleryDl(
     if (code === 0) {
       onDone({ outputDir, filename: outputFile })
     } else if (code !== null) {
-      onError({ message: `gallery-dl exited with code ${code}` })
+      if (onFallback) {
+        console.log('[downloader] gallery-dl failed, trying with browser cookies')
+        onFallback()
+      } else {
+        onError({ message: `gallery-dl exited with code ${code}` })
+      }
     }
   })
 
@@ -80,7 +87,7 @@ function runYtDlp(
   onDone: (data: DoneData) => void,
   onError: (data: ErrorData) => void,
   onAgeRestricted: () => void,
-  onUnsupportedUrl: () => void,
+  onFallback: () => void,
 ): void {
   const { url, outputDir, binDir, browser } = args
   console.log('[downloader] starting yt-dlp for:', url, browser ? `(browser: ${browser})` : '(no cookies)')
@@ -88,7 +95,6 @@ function runYtDlp(
   currentProcess = spawnYtDlp(args)
   let outputFile: string | null = null
   let ageRestricted = false
-  let unsupportedUrl = false
 
   currentProcess.stdout!.on('data', (data: Buffer) => {
     const text = data.toString()
@@ -112,28 +118,22 @@ function runYtDlp(
       console.warn('[yt-dlp] age restriction detected')
       ageRestricted = true
     }
-    if (/unsupported url/i.test(text)) {
-      console.warn('[yt-dlp] unsupported URL detected')
-      unsupportedUrl = true
-    }
     const errMatch = text.match(/ERROR: (.+)/)
     if (errMatch) onProgress({ status: `Error: ${errMatch[1]}` })
   })
 
   currentProcess.on('close', (code) => {
     currentProcess = null
-    console.log('[yt-dlp] exited with code', code, '| ageRestricted:', ageRestricted, '| unsupportedUrl:', unsupportedUrl)
+    console.log('[yt-dlp] exited with code', code, '| ageRestricted:', ageRestricted)
     if (code === 0) {
       onDone({ outputDir, filename: outputFile })
     } else if (code !== null) {
       if (ageRestricted) {
         console.log('[downloader] retrying due to age restriction')
         onAgeRestricted()
-      } else if (unsupportedUrl) {
-        console.log('[downloader] unsupported URL, trying fallback')
-        onUnsupportedUrl()
       } else {
-        onError({ message: `yt-dlp exited with code ${code}` })
+        console.log('[downloader] yt-dlp failed, trying gallery-dl fallback')
+        onFallback()
       }
     }
   })
@@ -156,9 +156,14 @@ export function startDownload(
   console.log('[downloader] startDownload', { url, format, outputDir, binDir })
   console.log('[downloader] yt-dlp exists:', existsSync(ytdlpPath), '| gallery-dl exists:', existsSync(gallerydlPath))
 
+  const galleryDlWithChrome = () => runGalleryDl(
+    { url, format, outputDir, binDir, browser: 'chrome' },
+    onProgress, onDone, onError,
+  )
+
   if (!existsSync(ytdlpPath)) {
     console.log('[downloader] yt-dlp not found, using gallery-dl directly')
-    runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
+    runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError, galleryDlWithChrome)
     return
   }
 
@@ -170,18 +175,20 @@ export function startDownload(
       onProgress, onDone, onError,
       () => onError({ message: 'yt-dlp exited with code 1' }),
       () => existsSync(gallerydlPath)
-        ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
-        : onError({ message: 'yt-dlp exited with code 1' }),
+        ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError, galleryDlWithChrome)
+        : onError({ message: 'yt-dlp failed and gallery-dl is not installed' }),
     )
   }
+
+  const fallbackToGalleryDl = () => existsSync(gallerydlPath)
+    ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError, galleryDlWithChrome)
+    : onError({ message: 'yt-dlp failed and gallery-dl is not installed' })
 
   runYtDlp(
     { url, format, outputDir, binDir },
     onProgress, onDone, onError,
     tryWithChrome,
-    () => existsSync(gallerydlPath)
-      ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
-      : onError({ message: 'yt-dlp exited with code 1' }),
+    fallbackToGalleryDl,
   )
 }
 
