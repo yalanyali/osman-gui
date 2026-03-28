@@ -1,0 +1,23 @@
+appId: com.yigit.ytdlp-gui
+productName: yt-dlp GUI
+copyright: Copyright © 2025
+
+mac:
+  target:
+    - target: dmg
+      arch: arm64
+    - target: zip
+      arch: arm64
+  category: public.app-category.utilities
+  darkModeSupport: true
+
+publish:
+  provider: github
+  owner: yalanyali
+  repo: osman-gui
+
+directories:
+  output: dist-electron
+
+files:
+  - out/**/*

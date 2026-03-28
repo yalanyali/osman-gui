@@ -1,0 +1,443 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #1c1c1e;
+  --surface: #2c2c2e;
+  --surface2: #3a3a3c;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.45);
+  --accent: #0a84ff;
+  --accent-hover: #409cff;
+  --success: #30d158;
+  --error: #ff453a;
+  --radius: 10px;
+  --radius-sm: 8px;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f2f2f7;
+    --surface: #ffffff;
+    --surface2: #e5e5ea;
+    --border: rgba(0, 0, 0, 0.08);
+    --text: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.45);
+    --accent: #007aff;
+    --accent-hover: #0066d6;
+  }
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  color: var(--text);
+  user-select: none;
+}
+
+/* ── App shell ── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Titlebar ── */
+
+.titlebar {
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 72px;
+  position: relative;
+  -webkit-app-region: drag;
+}
+
+.titlebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.settings-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-secondary);
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.update-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: block;
+}
+
+.settings-btn:hover,
+.settings-btn.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ── Main content ── */
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 24px 20px;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* ── Download form ── */
+
+.download-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field.row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  width: 52px;
+}
+
+.field:not(.row) .label {
+  width: auto;
+}
+
+.input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Segmented control ── */
+
+.segment {
+  display: flex;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.segment-btn {
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 5px 14px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.segment-btn.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.segment-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Folder picker ── */
+
+.folder-display {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 8px 12px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+
+.folder-display:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.folder-display:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Actions ── */
+
+.actions {
+  margin-top: 2px;
+}
+
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 11px;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.btn-cancel:hover {
+  background: var(--surface2);
+}
+
+/* ── Progress ── */
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.progress-bar-track {
+  height: 3px;
+  background: var(--surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.25s ease;
+}
+
+.progress-section.done .progress-bar-fill { background: var(--success); }
+.progress-section.error .progress-bar-fill { background: var(--error); }
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress-section.done .progress-label { color: var(--success); }
+.progress-section.error .progress-label { color: var(--error); }
+
+.progress-pct {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-error {
+  font-size: 12px;
+  color: var(--error);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.progress-actions {
+  display: flex;
+  gap: 14px;
+}
+
+/* ── Link buttons ── */
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+
+.link-btn:hover { opacity: 0.7; }
+
+/* ── Binary warning ── */
+
+.binary-warning {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* ── Settings panel ── */
+
+.settings-panel {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 14px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.binary-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.binary-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.binary-name {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.binary-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.binary-status.ok { color: var(--success); }
+.binary-status.missing { color: var(--error); }
+
+.binary-actions { flex-shrink: 0; }
+
+.binary-progress {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.binary-error {
+  width: 100%;
+  font-size: 11px;
+  color: var(--error);
+  line-height: 1.4;
+}
