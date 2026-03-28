@@ -33,7 +33,7 @@ let win: BrowserWindow | undefined
 function createWindow(): void {
   win = new BrowserWindow({
     width: 520,
-    height: 580,
+    height: 650,
     resizable: false,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 14 },

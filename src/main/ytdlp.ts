@@ -31,9 +31,10 @@ interface SpawnYtDlpArgs {
   format: string
   outputDir: string
   binDir: string
+  browser?: string
 }
 
-export function spawnYtDlp({ url, format, outputDir, binDir }: SpawnYtDlpArgs): ChildProcess {
+export function spawnYtDlp({ url, format, outputDir, binDir, browser }: SpawnYtDlpArgs): ChildProcess {
   const ytdlpPath = join(binDir, 'yt-dlp')
 
   const args = [
@@ -41,6 +42,10 @@ export function spawnYtDlp({ url, format, outputDir, binDir }: SpawnYtDlpArgs): 
     '--ffmpeg-location', binDir,
     '-o', '%(title)s.%(ext)s',
   ]
+
+  if (browser) {
+    args.push('--cookies-from-browser', browser)
+  }
 
   if (format === 'audio') {
     args.push('-x', '--audio-format', 'mp3', '--audio-quality', '0')

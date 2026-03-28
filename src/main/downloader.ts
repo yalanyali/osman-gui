@@ -67,22 +67,19 @@ function runGalleryDl(
   })
 }
 
-export function startDownload(
-  { url, format, outputDir, binDir }: DownloadArgs,
+function runYtDlp(
+  args: DownloadArgs & { browser?: string },
   onProgress: (data: ProgressData) => void,
   onDone: (data: DoneData) => void,
   onError: (data: ErrorData) => void,
+  onAgeRestricted: () => void,
+  onUnsupportedUrl: () => void,
 ): void {
-  const ytdlpPath = join(binDir, 'yt-dlp')
-  const gallerydlPath = join(binDir, 'gallery-dl')
+  const { url, outputDir, binDir } = args
 
-  if (!existsSync(ytdlpPath)) {
-    runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
-    return
-  }
-
-  currentProcess = spawnYtDlp({ url, format, outputDir, binDir })
+  currentProcess = spawnYtDlp(args)
   let outputFile: string | null = null
+  let ageRestricted = false
   let unsupportedUrl = false
 
   currentProcess.stdout!.on('data', (data: Buffer) => {
@@ -100,6 +97,7 @@ export function startDownload(
 
   currentProcess.stderr!.on('data', (data: Buffer) => {
     const text = data.toString()
+    if (/sign in|confirm your age|age.?restrict/i.test(text)) ageRestricted = true
     if (/unsupported url/i.test(text)) unsupportedUrl = true
     const errMatch = text.match(/ERROR: (.+)/)
     if (errMatch) onProgress({ status: `Error: ${errMatch[1]}` })
@@ -110,11 +108,13 @@ export function startDownload(
     if (code === 0) {
       onDone({ outputDir, filename: outputFile })
     } else if (code !== null) {
-      if (unsupportedUrl && existsSync(gallerydlPath)) {
-        runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
-        return
+      if (ageRestricted) {
+        onAgeRestricted()
+      } else if (unsupportedUrl) {
+        onUnsupportedUrl()
+      } else {
+        onError({ message: `yt-dlp exited with code ${code}` })
       }
-      onError({ message: `yt-dlp exited with code ${code}` })
     }
   })
 
@@ -122,6 +122,54 @@ export function startDownload(
     currentProcess = null
     onError({ message: err.message })
   })
+}
+
+export function startDownload(
+  { url, format, outputDir, binDir }: DownloadArgs,
+  onProgress: (data: ProgressData) => void,
+  onDone: (data: DoneData) => void,
+  onError: (data: ErrorData) => void,
+): void {
+  const ytdlpPath = join(binDir, 'yt-dlp')
+  const gallerydlPath = join(binDir, 'gallery-dl')
+
+  if (!existsSync(ytdlpPath)) {
+    runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
+    return
+  }
+
+  const tryWithSafari = () => {
+    onProgress({ status: 'Yaş doğrulaması için deneniyor…', percent: 0 })
+    runYtDlp(
+      { url, format, outputDir, binDir, browser: 'safari' },
+      onProgress, onDone, onError,
+      () => onError({ message: 'yt-dlp exited with code 1' }),
+      () => existsSync(gallerydlPath)
+        ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
+        : onError({ message: 'yt-dlp exited with code 1' }),
+    )
+  }
+
+  const tryWithChrome = () => {
+    onProgress({ status: 'Yaş doğrulaması için deneniyor…', percent: 0 })
+    runYtDlp(
+      { url, format, outputDir, binDir, browser: 'chrome' },
+      onProgress, onDone, onError,
+      tryWithSafari,
+      () => existsSync(gallerydlPath)
+        ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
+        : onError({ message: 'yt-dlp exited with code 1' }),
+    )
+  }
+
+  runYtDlp(
+    { url, format, outputDir, binDir },
+    onProgress, onDone, onError,
+    tryWithChrome,
+    () => existsSync(gallerydlPath)
+      ? runGalleryDl({ url, format, outputDir, binDir }, onProgress, onDone, onError)
+      : onError({ message: 'yt-dlp exited with code 1' }),
+  )
 }
 
 export function cancelDownload(): void {
