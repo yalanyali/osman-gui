@@ -10,7 +10,7 @@
     "preview": "electron-vite preview",
     "pack": "electron-vite build && electron-builder --dir",
     "test": "TS_NODE_PROJECT=tsconfig.node.json node --loader ts-node/esm src/main/ytdlp.test.ts",
-    "release": "electron-vite build && electron-builder --publish always"
+    "release": "export GH_TOKEN=$(gh auth token) && electron-vite build && electron-builder --publish always"
   },
   "dependencies": {
     "electron-updater": "^6.3.9"
