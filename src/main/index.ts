@@ -3,7 +3,7 @@ import { join } from 'path'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import pkg from 'electron-updater'
 const { autoUpdater } = pkg
-import { checkBinaries, installYtDlp, installFfmpeg, installGalleryDl } from './binaries.js'
+import { checkBinaries, installYtDlp, installFfmpeg } from './binaries.js'
 import { startDownload, cancelDownload } from './downloader.js'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -113,27 +113,6 @@ ipcMain.handle('update-ytdlp', async (event) => {
   }
 })
 
-ipcMain.handle('install-gallerydl', async (event) => {
-  try {
-    await installGalleryDl(app.getPath('userData'), (p) =>
-      event.sender.send('install-progress', { type: 'gallerydl', progress: p })
-    )
-    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
-  } catch (err) {
-    return { success: false, error: (err as Error).message }
-  }
-})
-
-ipcMain.handle('update-gallerydl', async (event) => {
-  try {
-    await installGalleryDl(app.getPath('userData'), (p) =>
-      event.sender.send('install-progress', { type: 'gallerydl', progress: p })
-    )
-    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
-  } catch (err) {
-    return { success: false, error: (err as Error).message }
-  }
-})
 
 ipcMain.handle('select-folder', async () => {
   const result = await dialog.showOpenDialog(win!, {

@@ -96,7 +96,7 @@ function AppUpdateRow({ appVersion, updateStatus, onCheckForUpdates, onInstallUp
   )
 }
 
-type BinaryType = 'ytdlp' | 'ffmpeg' | 'gallerydl'
+type BinaryType = 'ytdlp' | 'ffmpeg'
 
 interface BinaryManagerProps {
   binaries: BinaryStatus
@@ -145,16 +145,6 @@ export default function BinaryManager({
         progress={installProgress.ffmpeg}
         error={installError.ffmpeg}
         onInstall={() => onInstall('ffmpeg')}
-      />
-      <BinaryRow
-        name="gallery-dl"
-        loading={binariesLoading}
-        installed={binaries.gallerydl}
-        installing={installing.gallerydl}
-        progress={installProgress.gallerydl}
-        error={installError.gallerydl}
-        onInstall={() => onInstall('gallerydl')}
-        onUpdate={() => onInstall('gallerydl')}
       />
     </div>
   )

@@ -4,7 +4,7 @@ import ProgressBar from './components/ProgressBar'
 import BinaryManager from './components/BinaryManager'
 
 type DlState = 'idle' | 'downloading' | 'done' | 'error'
-type BinaryType = 'ytdlp' | 'ffmpeg' | 'gallerydl'
+type BinaryType = 'ytdlp' | 'ffmpeg'
 
 export default function App() {
   const [url, setUrl] = useState('')
@@ -14,11 +14,11 @@ export default function App() {
   const [progress, setProgress] = useState(0)
   const [filename, setFilename] = useState('')
   const [statusMsg, setStatusMsg] = useState('')
-  const [binaries, setBinaries] = useState<BinaryStatus>({ ytdlp: false, ffmpeg: false, gallerydl: false, version: null })
+  const [binaries, setBinaries] = useState<BinaryStatus>({ ytdlp: false, ffmpeg: false, version: null })
   const [settingsOpen, setSettingsOpen] = useState(true)
-  const [installing, setInstalling] = useState<Record<BinaryType, boolean>>({ ytdlp: false, ffmpeg: false, gallerydl: false })
-  const [installProgress, setInstallProgress] = useState<Record<BinaryType, number>>({ ytdlp: 0, ffmpeg: 0, gallerydl: 0 })
-  const [installError, setInstallError] = useState<Record<BinaryType, string | null>>({ ytdlp: null, ffmpeg: null, gallerydl: null })
+  const [installing, setInstalling] = useState<Record<BinaryType, boolean>>({ ytdlp: false, ffmpeg: false })
+  const [installProgress, setInstallProgress] = useState<Record<BinaryType, number>>({ ytdlp: 0, ffmpeg: 0 })
+  const [installError, setInstallError] = useState<Record<BinaryType, string | null>>({ ytdlp: null, ffmpeg: null })
   const [appVersion, setAppVersion] = useState<string | null>(null)
   const [updateStatus, setUpdateStatus] = useState<UpdateStatusData | null>(null)
   const [binariesLoading, setBinariesLoading] = useState(true)
@@ -30,7 +30,6 @@ export default function App() {
       if (!b.ytdlp) setSettingsOpen(true)
       if (!b.ytdlp) handleInstall('ytdlp')
       if (!b.ffmpeg) handleInstall('ffmpeg')
-      if (!b.gallerydl) handleInstall('gallerydl')
     })
     window.api.getConfig().then((cfg) => setOutputDir(cfg.outputDir))
     window.api.getAppVersion().then(setAppVersion)
@@ -110,9 +109,7 @@ export default function App() {
     setInstallError((prev) => ({ ...prev, [type]: null }))
     setInstallProgress((prev) => ({ ...prev, [type]: 0 }))
 
-    const fn = type === 'ytdlp' ? window.api.installYtDlp
-      : type === 'gallerydl' ? window.api.installGalleryDl
-      : window.api.installFfmpeg
+    const fn = type === 'ytdlp' ? window.api.installYtDlp : window.api.installFfmpeg
     const result = await fn()
 
     setInstalling((prev) => ({ ...prev, [type]: false }))
@@ -124,7 +121,7 @@ export default function App() {
   }
 
   const canDownload =
-    (binaries.ytdlp || binaries.gallerydl) &&
+    binaries.ytdlp &&
     !!url.trim() &&
     !!outputDir &&
     dlState !== 'downloading'
@@ -168,7 +165,7 @@ export default function App() {
           />
         )}
 
-        {!binariesLoading && !binaries.ytdlp && !binaries.gallerydl && dlState === 'idle' && (
+        {!binariesLoading && !binaries.ytdlp && dlState === 'idle' && (
           <div className="binary-warning">
             yt-dlp kurulu değil — kurmak için Ayarlar ⚙ bölümünü aç
           </div>

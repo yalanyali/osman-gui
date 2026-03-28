@@ -8,7 +8,6 @@ import http from 'http'
 export interface BinaryStatus {
   ytdlp: boolean
   ffmpeg: boolean
-  gallerydl: boolean
   version: string | null
 }
 
@@ -22,13 +21,11 @@ export function checkBinaries(userData: string): BinaryStatus {
   const binDir = getBinDir(userData)
   const ytdlpPath = join(binDir, 'yt-dlp')
   const ffmpegPath = join(binDir, 'ffmpeg')
-  const gallerydlPath = join(binDir, 'gallery-dl')
 
   const ytdlp = existsSync(ytdlpPath)
   const ffmpeg = existsSync(ffmpegPath)
-  const gallerydl = existsSync(gallerydlPath)
 
-  return { ytdlp, ffmpeg, gallerydl, version: null }
+  return { ytdlp, ffmpeg, version: null }
 }
 
 function downloadFile(url: string, dest: string, onProgress?: (pct: number) => void): Promise<void> {
@@ -87,13 +84,6 @@ export async function installYtDlp(userData: string, onProgress?: (pct: number) 
   chmodSync(dest, 0o755)
 }
 
-export async function installGalleryDl(userData: string, onProgress?: (pct: number) => void): Promise<void> {
-  const binDir = getBinDir(userData)
-  const dest = join(binDir, 'gallery-dl')
-  const url = 'https://github.com/mikf/gallery-dl/releases/latest/download/gallery-dl.bin'
-  await downloadFile(url, dest, onProgress)
-  chmodSync(dest, 0o755)
-}
 
 export async function installFfmpeg(userData: string, onProgress?: (pct: number) => void): Promise<void> {
   const binDir = getBinDir(userData)

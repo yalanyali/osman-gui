@@ -3,7 +3,6 @@ declare module '*.css'
 interface BinaryStatus {
   ytdlp: boolean
   ffmpeg: boolean
-  gallerydl: boolean
   version: string | null
 }
 
@@ -26,9 +25,7 @@ interface Window {
     installYtDlp(): Promise<InstallResult>
     installFfmpeg(): Promise<InstallResult>
     updateYtDlp(): Promise<InstallResult>
-    installGalleryDl(): Promise<InstallResult>
-    updateGalleryDl(): Promise<InstallResult>
-    selectFolder(): Promise<string | null>
+selectFolder(): Promise<string | null>
     getConfig(): Promise<{ outputDir: string }>
     openFolder(path: string): Promise<void>
     download(opts: { url: string; format: string; outputDir: string }): Promise<{ started: boolean }>
