@@ -1,34 +1,39 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join } from 'path'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
-import { autoUpdater } from 'electron-updater'
-import { checkBinaries, installYtDlp, installFfmpeg } from './binaries.js'
-import { startDownload, cancelDownload } from './ytdlp.js'
+import pkg from 'electron-updater'
+const { autoUpdater } = pkg
+import { checkBinaries, installYtDlp, installFfmpeg, installGalleryDl } from './binaries.js'
+import { startDownload, cancelDownload } from './downloader.js'
 
 const isDev = process.env.NODE_ENV === 'development'
 
-function getConfigPath() {
+interface Config {
+  outputDir: string
+}
+
+function getConfigPath(): string {
   return join(app.getPath('userData'), 'config.json')
 }
 
-function loadConfig() {
+function loadConfig(): Config {
   const p = getConfigPath()
   if (existsSync(p)) {
-    try { return JSON.parse(readFileSync(p, 'utf8')) } catch {}
+    try { return JSON.parse(readFileSync(p, 'utf8')) as Config } catch {}
   }
   return { outputDir: app.getPath('downloads') }
 }
 
-function saveConfig(updates) {
+function saveConfig(updates: Partial<Config>): void {
   writeFileSync(getConfigPath(), JSON.stringify({ ...loadConfig(), ...updates }, null, 2))
 }
 
-let win
+let win: BrowserWindow | undefined
 
-function createWindow() {
+function createWindow(): void {
   win = new BrowserWindow({
-    width: 480,
-    height: 520,
+    width: 520,
+    height: 580,
     resizable: false,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 14 },
@@ -41,7 +46,7 @@ function createWindow() {
   })
 
   if (isDev) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    win.loadURL(process.env['ELECTRON_RENDERER_URL']!)
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'))
@@ -80,9 +85,9 @@ ipcMain.handle('install-ytdlp', async (event) => {
     await installYtDlp(app.getPath('userData'), (p) =>
       event.sender.send('install-progress', { type: 'ytdlp', progress: p })
     )
-    return { success: true, binaries: await checkBinaries(app.getPath('userData')) }
+    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
   } catch (err) {
-    return { success: false, error: err.message }
+    return { success: false, error: (err as Error).message }
   }
 })
 
@@ -91,9 +96,9 @@ ipcMain.handle('install-ffmpeg', async (event) => {
     await installFfmpeg(app.getPath('userData'), (p) =>
       event.sender.send('install-progress', { type: 'ffmpeg', progress: p })
     )
-    return { success: true, binaries: await checkBinaries(app.getPath('userData')) }
+    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
   } catch (err) {
-    return { success: false, error: err.message }
+    return { success: false, error: (err as Error).message }
   }
 })
 
@@ -102,14 +107,36 @@ ipcMain.handle('update-ytdlp', async (event) => {
     await installYtDlp(app.getPath('userData'), (p) =>
       event.sender.send('install-progress', { type: 'ytdlp', progress: p })
     )
-    return { success: true, binaries: await checkBinaries(app.getPath('userData')) }
+    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
   } catch (err) {
-    return { success: false, error: err.message }
+    return { success: false, error: (err as Error).message }
+  }
+})
+
+ipcMain.handle('install-gallerydl', async (event) => {
+  try {
+    await installGalleryDl(app.getPath('userData'), (p) =>
+      event.sender.send('install-progress', { type: 'gallerydl', progress: p })
+    )
+    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
+  } catch (err) {
+    return { success: false, error: (err as Error).message }
+  }
+})
+
+ipcMain.handle('update-gallerydl', async (event) => {
+  try {
+    await installGalleryDl(app.getPath('userData'), (p) =>
+      event.sender.send('install-progress', { type: 'gallerydl', progress: p })
+    )
+    return { success: true, binaries: checkBinaries(app.getPath('userData')) }
+  } catch (err) {
+    return { success: false, error: (err as Error).message }
   }
 })
 
 ipcMain.handle('select-folder', async () => {
-  const result = await dialog.showOpenDialog(win, {
+  const result = await dialog.showOpenDialog(win!, {
     properties: ['openDirectory'],
     defaultPath: loadConfig().outputDir,
   })
@@ -123,9 +150,9 @@ ipcMain.handle('select-folder', async () => {
 
 ipcMain.handle('get-config', () => loadConfig())
 
-ipcMain.handle('open-folder', (_, folderPath) => shell.openPath(folderPath))
+ipcMain.handle('open-folder', (_, folderPath: string) => shell.openPath(folderPath))
 
-ipcMain.handle('download', (event, { url, format, outputDir }) => {
+ipcMain.handle('download', (event, { url, format, outputDir }: { url: string; format: string; outputDir: string }) => {
   startDownload(
     { url, format, outputDir, binDir: join(app.getPath('userData'), 'bin') },
     (data) => event.sender.send('dl-progress', data),

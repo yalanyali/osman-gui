@@ -1,6 +1,6 @@
 import React from 'react'
 
-function displayPath(p) {
+function displayPath(p: string): string {
   if (!p) return ''
   const homeMatch = p.match(/^\/Users\/[^/]+/)
   const s = homeMatch ? '~' + p.slice(homeMatch[0].length) : p
@@ -11,15 +11,32 @@ function displayPath(p) {
     : s
 }
 
+interface DownloadFormProps {
+  url: string
+  setUrl: (url: string) => void
+  format: string
+  setFormat: (format: string) => void
+  outputDir: string
+  onSelectFolder: () => void
+  onDownload: () => void
+  onCancel: () => void
+  dlState: string
+  canDownload: boolean
+}
+
 export default function DownloadForm({
   url, setUrl, format, setFormat,
   outputDir, onSelectFolder,
   onDownload, onCancel,
   dlState, canDownload,
-}) {
+}: DownloadFormProps) {
   const downloading = dlState === 'downloading'
 
-  const handlePaste = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && canDownload) onDownload()
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData('text')
     if (text) {
       setUrl(text)
@@ -30,13 +47,14 @@ export default function DownloadForm({
   return (
     <div className="download-form">
       <div className="field">
-        <label className="label">URL</label>
+        <label className="label">Link</label>
         <input
           className="input"
           type="url"
-          placeholder="https://youtube.com/watch?v=…"
+          placeholder="YouTube veya başka bir site linki yapıştırın…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           disabled={downloading}
           spellCheck={false}
@@ -61,27 +79,27 @@ export default function DownloadForm({
             onClick={() => setFormat('audio')}
             disabled={downloading}
           >
-            Audio (MP3)
+            Müzik (MP3)
           </button>
         </div>
       </div>
 
       <div className="field row">
-        <span className="label">Save to</span>
+        <span className="label">Klasör</span>
         <button
           className="folder-display"
           onClick={onSelectFolder}
           disabled={downloading}
           title={outputDir}
         >
-          {displayPath(outputDir) || 'Select folder…'}
+          {displayPath(outputDir) || 'Klasör seç…'}
         </button>
       </div>
 
       <div className="actions">
         {downloading ? (
           <button className="btn btn-cancel" onClick={onCancel}>
-            Cancel
+            İptal
           </button>
         ) : (
           <button
@@ -89,7 +107,7 @@ export default function DownloadForm({
             onClick={onDownload}
             disabled={!canDownload}
           >
-            Download
+            İndir
           </button>
         )}
       </div>

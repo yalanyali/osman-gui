@@ -1,24 +1,30 @@
 {
-  "name": "yt-dlp-gui",
-  "version": "1.0.0",
-  "description": "Minimal macOS GUI for yt-dlp",
+  "name": "osman-app",
+  "version": "1.0.1",
+  "description": "Osman App",
   "main": "out/main/index.js",
   "type": "module",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build && electron-builder",
     "preview": "electron-vite preview",
-    "pack": "electron-vite build && electron-builder --dir"
+    "pack": "electron-vite build && electron-builder --dir",
+    "test": "TS_NODE_PROJECT=tsconfig.node.json node --loader ts-node/esm src/main/ytdlp.test.ts"
   },
   "dependencies": {
     "electron-updater": "^6.3.9"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
   }
 }

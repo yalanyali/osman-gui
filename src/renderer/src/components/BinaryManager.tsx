@@ -1,14 +1,28 @@
 import React from 'react'
 
-function BinaryRow({ name, installed, version, installing, progress, error, onInstall, onUpdate }) {
+interface BinaryRowProps {
+  name: string
+  loading?: boolean
+  installed: boolean
+  version?: string | null
+  installing: boolean
+  progress: number
+  error: string | null
+  onInstall: () => void
+  onUpdate?: () => void
+}
+
+function BinaryRow({ name, loading, installed, version, installing, progress, error, onInstall, onUpdate }: BinaryRowProps) {
   return (
     <div className="binary-row">
       <div className="binary-info">
         <span className="binary-name">{name}</span>
-        {installed ? (
-          <span className="binary-status ok">{version || 'installed'}</span>
+        {loading ? (
+          <span className="binary-status">…</span>
+        ) : installed ? (
+          <span className="binary-status ok">{version || 'kurulu'}</span>
         ) : (
-          <span className="binary-status missing">not installed</span>
+          <span className="binary-status missing">kurulu değil</span>
         )}
       </div>
       <div className="binary-actions">
@@ -17,12 +31,12 @@ function BinaryRow({ name, installed, version, installing, progress, error, onIn
         ) : installed ? (
           onUpdate && (
             <button className="link-btn" onClick={onUpdate}>
-              Update
+              Güncelle
             </button>
           )
         ) : (
           <button className="link-btn" onClick={onInstall}>
-            Install
+            Kur
           </button>
         )}
       </div>
@@ -31,31 +45,38 @@ function BinaryRow({ name, installed, version, installing, progress, error, onIn
   )
 }
 
-function AppUpdateRow({ appVersion, updateStatus, onCheckForUpdates, onInstallUpdate }) {
+interface AppUpdateRowProps {
+  appVersion: string | null
+  updateStatus: UpdateStatusData | null
+  onCheckForUpdates: () => void
+  onInstallUpdate: () => void
+}
+
+function AppUpdateRow({ appVersion, updateStatus, onCheckForUpdates, onInstallUpdate }: AppUpdateRowProps) {
   const isDownloading = updateStatus?.status === 'downloading'
 
-  let statusEl = null
+  let statusEl: React.ReactNode = null
   if (updateStatus?.status === 'available') {
-    statusEl = <span className="binary-status">v{updateStatus.version} available</span>
-  } else if (isDownloading) {
+    statusEl = <span className="binary-status">v{updateStatus.version} mevcut</span>
+  } else if (isDownloading && updateStatus?.status === 'downloading') {
     statusEl = <span className="binary-status">{updateStatus.percent}%</span>
   } else if (updateStatus?.status === 'ready') {
-    statusEl = <span className="binary-status ok">ready to install</span>
+    statusEl = <span className="binary-status ok">kurulmaya hazır</span>
   } else if (updateStatus?.status === 'error') {
-    statusEl = <span className="binary-status missing">update error</span>
+    statusEl = <span className="binary-status missing">güncelleme hatası</span>
   }
 
-  let actionEl = null
+  let actionEl: React.ReactNode = null
   if (updateStatus?.status === 'ready') {
     actionEl = (
       <button className="link-btn" onClick={onInstallUpdate}>
-        Restart
+        Yeniden Başlat
       </button>
     )
   } else if (!isDownloading) {
     actionEl = (
       <button className="link-btn" onClick={onCheckForUpdates}>
-        Check
+        Kontrol Et
       </button>
     )
   }
@@ -63,7 +84,7 @@ function AppUpdateRow({ appVersion, updateStatus, onCheckForUpdates, onInstallUp
   return (
     <div className="binary-row">
       <div className="binary-info">
-        <span className="binary-name">yt-dlp GUI</span>
+        <span className="binary-name">Osman App</span>
         <span className="binary-status ok">{appVersion ? `v${appVersion}` : ''}</span>
         {statusEl}
       </div>
@@ -75,22 +96,39 @@ function AppUpdateRow({ appVersion, updateStatus, onCheckForUpdates, onInstallUp
   )
 }
 
+type BinaryType = 'ytdlp' | 'ffmpeg' | 'gallerydl'
+
+interface BinaryManagerProps {
+  binaries: BinaryStatus
+  binariesLoading: boolean
+  installing: Record<BinaryType, boolean>
+  installProgress: Record<BinaryType, number>
+  installError: Record<BinaryType, string | null>
+  onInstall: (type: BinaryType) => void
+  onUpdate: () => void
+  appVersion: string | null
+  updateStatus: UpdateStatusData | null
+  onCheckForUpdates: () => void
+  onInstallUpdate: () => void
+}
+
 export default function BinaryManager({
-  binaries, installing, installProgress, installError, onInstall, onUpdate,
+  binaries, binariesLoading, installing, installProgress, installError, onInstall, onUpdate,
   appVersion, updateStatus, onCheckForUpdates, onInstallUpdate,
-}) {
+}: BinaryManagerProps) {
   return (
     <div className="settings-panel">
-      <div className="settings-title">App</div>
+      <div className="settings-title">Uygulama</div>
       <AppUpdateRow
         appVersion={appVersion}
         updateStatus={updateStatus}
         onCheckForUpdates={onCheckForUpdates}
         onInstallUpdate={onInstallUpdate}
       />
-      <div className="settings-title">Dependencies</div>
+      <div className="settings-title">Ekstra</div>
       <BinaryRow
         name="yt-dlp"
+        loading={binariesLoading}
         installed={binaries.ytdlp}
         version={binaries.version}
         installing={installing.ytdlp}
@@ -101,11 +139,22 @@ export default function BinaryManager({
       />
       <BinaryRow
         name="ffmpeg"
+        loading={binariesLoading}
         installed={binaries.ffmpeg}
         installing={installing.ffmpeg}
         progress={installProgress.ffmpeg}
         error={installError.ffmpeg}
         onInstall={() => onInstall('ffmpeg')}
+      />
+      <BinaryRow
+        name="gallery-dl"
+        loading={binariesLoading}
+        installed={binaries.gallerydl}
+        installing={installing.gallerydl}
+        progress={installProgress.gallerydl}
+        error={installError.gallerydl}
+        onInstall={() => onInstall('gallerydl')}
+        onUpdate={() => onInstall('gallerydl')}
       />
     </div>
   )

@@ -1,19 +1,29 @@
 import React from 'react'
 
+interface ProgressBarProps {
+  dlState: string
+  progress: number
+  filename: string
+  statusMsg: string
+  outputDir: string
+  onOpenFolder: () => void
+  onReset: () => void
+}
+
 export default function ProgressBar({
   dlState, progress, filename, statusMsg,
   outputDir, onOpenFolder, onReset,
-}) {
+}: ProgressBarProps) {
   const downloading = dlState === 'downloading'
   const done = dlState === 'done'
   const error = dlState === 'error'
 
   let label = ''
-  if (done) label = '✓ Done'
-  else if (error) label = '✗ Failed'
+  if (done) label = '✓ İndirildi!'
+  else if (error) label = 'Bir hata oluştu'
   else if (statusMsg) label = statusMsg
   else if (filename) label = filename
-  else label = 'Starting…'
+  else label = 'Başlıyor…'
 
   return (
     <div className={`progress-section ${dlState}`}>
@@ -31,19 +41,19 @@ export default function ProgressBar({
         )}
       </div>
 
-      {error && statusMsg && (
-        <div className="progress-error">{statusMsg}</div>
+      {error && (
+        <div className="progress-error">Bir hata oluştu, tekrar deneyin.</div>
       )}
 
       <div className="progress-actions">
         {done && (
-          <button className="link-btn" onClick={onOpenFolder}>
-            Open Folder
+          <button className="btn btn-secondary" onClick={onOpenFolder}>
+            Klasörü Aç
           </button>
         )}
         {(done || error) && (
-          <button className="link-btn" onClick={onReset}>
-            Dismiss
+          <button className="btn btn-secondary" onClick={onReset}>
+            Kapat
           </button>
         )}
       </div>

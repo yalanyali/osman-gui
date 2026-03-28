@@ -1,55 +1,54 @@
 import { existsSync, mkdirSync, createWriteStream, chmodSync, unlinkSync } from 'fs'
 import { join } from 'path'
-import { spawn, execFile } from 'child_process'
-import { promisify } from 'util'
+import { spawn } from 'child_process'
 import https from 'https'
 import http from 'http'
 
-const execFileAsync = promisify(execFile)
 
-function getBinDir(userData) {
+export interface BinaryStatus {
+  ytdlp: boolean
+  ffmpeg: boolean
+  gallerydl: boolean
+  version: string | null
+}
+
+function getBinDir(userData: string): string {
   const dir = join(userData, 'bin')
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
   return dir
 }
 
-export async function checkBinaries(userData) {
+export function checkBinaries(userData: string): BinaryStatus {
   const binDir = getBinDir(userData)
   const ytdlpPath = join(binDir, 'yt-dlp')
   const ffmpegPath = join(binDir, 'ffmpeg')
+  const gallerydlPath = join(binDir, 'gallery-dl')
 
   const ytdlp = existsSync(ytdlpPath)
   const ffmpeg = existsSync(ffmpegPath)
+  const gallerydl = existsSync(gallerydlPath)
 
-  let version = null
-  if (ytdlp) {
-    try {
-      const { stdout } = await execFileAsync(ytdlpPath, ['--version'])
-      version = stdout.trim()
-    } catch {}
-  }
-
-  return { ytdlp, ffmpeg, version }
+  return { ytdlp, ffmpeg, gallerydl, version: null }
 }
 
-function downloadFile(url, dest, onProgress) {
+function downloadFile(url: string, dest: string, onProgress?: (pct: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
-    const follow = (url) => {
+    const follow = (url: string): void => {
       const mod = url.startsWith('https') ? https : http
-      mod.get(url, { headers: { 'User-Agent': 'yt-dlp-gui/1.0' } }, (res) => {
-        if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
-          return follow(res.headers.location)
+      mod.get(url, { headers: { 'User-Agent': 'osman-app/1.0' } }, (res) => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode!)) {
+          return follow(res.headers.location as string)
         }
         if (res.statusCode !== 200) {
           res.resume()
           return reject(new Error(`HTTP ${res.statusCode}`))
         }
 
-        const total = parseInt(res.headers['content-length'] || '0', 10)
+        const total = parseInt(res.headers['content-length'] ?? '0', 10)
         let received = 0
         const file = createWriteStream(dest)
 
-        res.on('data', (chunk) => {
+        res.on('data', (chunk: Buffer) => {
           received += chunk.length
           if (total > 0) onProgress?.(Math.round((received / total) * 100))
           file.write(chunk)
@@ -64,14 +63,14 @@ function downloadFile(url, dest, onProgress) {
   })
 }
 
-function fetchJson(url) {
+function fetchJson<T = unknown>(url: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'yt-dlp-gui/1.0' } }, (res) => {
-      if ([301, 302, 303].includes(res.statusCode)) {
-        return resolve(fetchJson(res.headers.location))
+    https.get(url, { headers: { 'User-Agent': 'osman-app/1.0' } }, (res) => {
+      if ([301, 302, 303].includes(res.statusCode!)) {
+        return resolve(fetchJson(res.headers.location as string))
       }
       let data = ''
-      res.on('data', (c) => (data += c))
+      res.on('data', (c: string) => (data += c))
       res.on('end', () => {
         try { resolve(JSON.parse(data)) } catch (e) { reject(e) }
       })
@@ -80,7 +79,7 @@ function fetchJson(url) {
   })
 }
 
-export async function installYtDlp(userData, onProgress) {
+export async function installYtDlp(userData: string, onProgress?: (pct: number) => void): Promise<void> {
   const binDir = getBinDir(userData)
   const dest = join(binDir, 'yt-dlp')
   const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
@@ -88,22 +87,30 @@ export async function installYtDlp(userData, onProgress) {
   chmodSync(dest, 0o755)
 }
 
-export async function installFfmpeg(userData, onProgress) {
+export async function installGalleryDl(userData: string, onProgress?: (pct: number) => void): Promise<void> {
+  const binDir = getBinDir(userData)
+  const dest = join(binDir, 'gallery-dl')
+  const url = 'https://github.com/mikf/gallery-dl/releases/latest/download/gallery-dl.bin'
+  await downloadFile(url, dest, onProgress)
+  chmodSync(dest, 0o755)
+}
+
+export async function installFfmpeg(userData: string, onProgress?: (pct: number) => void): Promise<void> {
   const binDir = getBinDir(userData)
   const zipDest = join(binDir, 'ffmpeg.zip')
 
-  let zipUrl
+  let zipUrl: string
   try {
-    const info = await fetchJson('https://evermeet.cx/ffmpeg/info/ffmpeg/release')
+    const info = await fetchJson<{ download: { zip: { url: string } } }>('https://evermeet.cx/ffmpeg/info/ffmpeg/release')
     zipUrl = info.download.zip.url
     if (!zipUrl) throw new Error('No zip URL in response')
   } catch (err) {
-    throw new Error(`Failed to fetch ffmpeg info: ${err.message}`)
+    throw new Error(`Failed to fetch ffmpeg info: ${(err as Error).message}`)
   }
 
   await downloadFile(zipUrl, zipDest, onProgress)
 
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const proc = spawn('unzip', ['-o', zipDest, 'ffmpeg', '-d', binDir])
     proc.on('close', (code) => {
       if (code === 0) resolve()

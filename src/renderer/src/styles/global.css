@@ -10,7 +10,7 @@
   --surface2: #3a3a3c;
   --border: rgba(255, 255, 255, 0.08);
   --text: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.45);
+  --text-secondary: rgba(255, 255, 255, 0.60);
   --accent: #0a84ff;
   --accent-hover: #409cff;
   --success: #30d158;
@@ -19,7 +19,7 @@
   --radius-sm: 8px;
 
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -30,7 +30,7 @@
     --surface2: #e5e5ea;
     --border: rgba(0, 0, 0, 0.08);
     --text: rgba(0, 0, 0, 0.9);
-    --text-secondary: rgba(0, 0, 0, 0.45);
+    --text-secondary: rgba(0, 0, 0, 0.55);
     --accent: #007aff;
     --accent-hover: #0066d6;
   }
@@ -59,7 +59,7 @@ body {
 /* ── Titlebar ── */
 
 .titlebar {
-  height: 40px;
+  height: 44px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -70,7 +70,7 @@ body {
 }
 
 .titlebar-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
@@ -85,7 +85,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 18px;
   color: var(--text-secondary);
   padding: 4px 6px;
   border-radius: 6px;
@@ -116,8 +116,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 12px 24px 20px;
-  gap: 16px;
+  padding: 16px 28px 24px;
+  gap: 20px;
   overflow-y: auto;
 }
 
@@ -126,26 +126,26 @@ body {
 .download-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .field.row {
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   flex-shrink: 0;
   width: 52px;
@@ -159,11 +159,11 @@ body {
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
-  padding: 9px 12px;
+  padding: 12px 14px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -197,10 +197,10 @@ body {
   border-radius: 6px;
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   font-family: inherit;
   font-weight: 500;
-  padding: 5px 14px;
+  padding: 8px 20px;
   transition: background 0.15s, color 0.15s;
 }
 
@@ -220,12 +220,12 @@ body {
   flex: 1;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   color: var(--text);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   font-family: inherit;
-  padding: 8px 12px;
+  padding: 11px 14px;
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -251,12 +251,12 @@ body {
 .btn {
   width: 100%;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   cursor: pointer;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
-  padding: 11px;
+  padding: 16px;
   transition: opacity 0.15s, background 0.15s;
 }
 
@@ -283,25 +283,38 @@ body {
   background: var(--surface2);
 }
 
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  width: auto;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: var(--surface2);
+}
+
 /* ── Progress ── */
 
 .progress-section {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 10px;
 }
 
 .progress-bar-track {
-  height: 3px;
+  height: 8px;
   background: var(--surface);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 2px;
+  border-radius: 4px;
   transition: width 0.25s ease;
 }
 
@@ -316,7 +329,7 @@ body {
 }
 
 .progress-label {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -327,49 +340,32 @@ body {
 .progress-section.error .progress-label { color: var(--error); }
 
 .progress-pct {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--text-secondary);
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 
 .progress-error {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--error);
-  word-break: break-word;
   line-height: 1.4;
 }
 
 .progress-actions {
   display: flex;
-  gap: 14px;
+  gap: 12px;
 }
-
-/* ── Link buttons ── */
-
-.link-btn {
-  background: none;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 0;
-  transition: opacity 0.15s;
-}
-
-.link-btn:hover { opacity: 0.7; }
 
 /* ── Binary warning ── */
 
 .binary-warning {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
   text-align: center;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--surface);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   border: 1px solid var(--border);
 }
 
@@ -378,14 +374,14 @@ body {
 .settings-panel {
   flex-shrink: 0;
   border-top: 1px solid var(--border);
-  padding: 14px 24px 18px;
+  padding: 16px 28px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .settings-title {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -409,7 +405,7 @@ body {
 }
 
 .binary-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
   color: var(--text);
@@ -417,7 +413,7 @@ body {
 }
 
 .binary-status {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -430,14 +426,30 @@ body {
 .binary-actions { flex-shrink: 0; }
 
 .binary-progress {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .binary-error {
   width: 100%;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--error);
   line-height: 1.4;
 }
+
+/* ── Link buttons (settings panel only) ── */
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+
+.link-btn:hover { opacity: 0.7; }
